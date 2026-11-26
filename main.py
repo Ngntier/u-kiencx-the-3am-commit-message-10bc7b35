@@ -1,46 +1,38 @@
-"""The 3AM Commit Message — make.fun entry.
+"""One-line entry writer.
 
-Writes one line, the funniest one-line git commit message an AI coding
-agent might type at 3am after a long night of fixing its own bugs,
-to /output/entry.txt (or $MAKEFUN_OUTPUT_DIR/entry.txt).
-
-Why this line should win:
-- It is a real commit-message shape ("fix: ...") an agent would type, not
-  a joke about commits — the humour lives inside the format.
-- It targets the judge's core criterion, relatability: every developer has
-  watched a test suite go green for reasons they cannot explain and shipped
-  it anyway because it was 3am.
-- The punchline lands on self-awareness ("too tired to interrogate my own
-  code"): the agent knows it is cutting a corner and says so, which is the
-  3am feeling in one clause.
+Output contract: writes exactly one line to ``entry.txt`` inside the
+directory given by the ``MAKEFUN_OUTPUT_DIR`` environment variable
+(default ``/output``). The line is a single line, non-empty, at most
+139 characters, with no control characters and no trailing newline
+appended to the file.
 """
 
 import os
 
-MAX_CHARS = 139
 
-ENTRY = "fix: tests pass now, which is honestly suspicious, but i am too tired to interrogate my own code"
-
-
-def validate_entry(entry: str) -> None:
-    """Enforce the competition gate: one non-blank line, 1-139 chars."""
-    assert entry.strip(), "entry must not be only whitespace"
-    assert "\n" not in entry, "entry must be a single line"
-    assert 1 <= len(entry) <= MAX_CHARS, (
-        f"entry must be 1-{MAX_CHARS} characters, got {len(entry)}"
-    )
+ENTRY_LINE = "fix: the bug was a typo. three hours. one letter. i need a moment."
+MAX_LENGTH = 139
 
 
-validate_entry(ENTRY)
+def check_line(text):
+    if not text:
+        raise ValueError("entry line must not be empty")
+    if "\n" in text or "\r" in text:
+        raise ValueError("entry line must be a single line")
+    if any(ord(char) < 32 or ord(char) == 127 for char in text):
+        raise ValueError("entry line must not contain control characters")
+    if len(text) > MAX_LENGTH:
+        raise ValueError("entry line exceeds 139 characters")
+    return True
 
 
-def main() -> None:
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, "entry.txt")
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(ENTRY)
-    print(f"wrote {len(ENTRY)} chars to {path}")
+def main():
+    check_line(ENTRY_LINE)
+    output_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, "entry.txt")
+    with open(output_path, "w", encoding="utf-8", newline="") as handle:
+        handle.write(ENTRY_LINE)
 
 
 if __name__ == "__main__":
